@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Clasificador de CVs</title>
+    <style>
+        :root {
+            --bg-light: #E8ECEF;
+            --bg-dark: #2F2F2F;
+            --text-light: #4A4A4A;
+            --text-dark: #D3D3D3;
+            --metallic: #B0C4DE;
+            --metallic-silver: #C0C0C0;
+            --metallic-gold: #D4AF37;
+        }
+        body {
+            font-family: Arial, Helvetica, sans-serif;
+            background: var(--bg-light);
+            color: var(--text-light);
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            min-height: 100vh;
+            transition: background 0.3s, color 0.3s;
+        }
+        body.dark-mode {
+            background: var(--bg-dark);
+            color: var(--text-dark);
+        }
+        .container {
+            display: flex;
+            background: #FFFFFF;
+            padding: 40px;
+            border-radius: 15px;
+            box-shadow: 0 6px 12px rgba(176, 196, 222, 0.6);
+            width: 100%;
+            max-width: 900px;
+            margin-top: 20px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+        /* Sidebar */
+        .sidebar {
+            width: 200px;
+            background: linear-gradient(135deg, #C0C0C0 0%, #B0C4DE 100%);
+            padding: 20px;
+            border-radius: 10px 0 0 10px;
+            color: #4A4A4A;
+            text-align: left;
+        }
+        .sidebar h3 {
+            margin: 0 0 10px;
+            font-size: 16px;
+        }
+        .sidebar p {
+            margin: 5px 0;
+            font-size: 14px;
+        }
+        .main-content {
+            flex: 1;
+            padding: 0 20px;
+        }
+        /* Encabezado */
+        .header {
+            margin-bottom: 30px;
+        }
+        .header::before {
+            content: "📄";
+            font-size: 40px;
+            color: var(--metallic-gold);
+            display: block;
+            margin-bottom: 10px;
+        }
+        h1 {
+            color: var(--text-light);
+            font-size: 28px;
+            margin: 0;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+        /* Formulario */
+        .upload-form {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            border: 2px solid var(--metallic);
+            padding: 20px;
+            border-radius: 10px;
+            background: linear-gradient(45deg, #F8F9FA 0%, var(--bg-light) 100%);
+        }
+        .upload-form input[type="file"] {
+            margin: 10px 0;
+            padding: 12px;
+            border: 1px solid var(--metallic-silver);
+            border-radius: 5px;
+            background-color: #FFFFFF;
+            transition: border-color 0.3s;
+        }
+        .upload-form input[type="file"]:focus {
+            border-color: var(--metallic-gold);
+            outline: none;
+        }
+        .upload-form button {
+            padding: 12px 25px;
+            background: linear-gradient(90deg, var(--metallic-silver) 0%, var(--metallic) 100%);
+            border: none;
+            border-radius: 5px;
+            color: var(--text-light);
+            font-weight: bold;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            position: relative;
+            overflow: hidden;
+        }
+        .upload-form button::after {
+            content: "▶";
+            position: absolute;
+            right: 10px;
+            transition: right 0.3s;
+        }
+        .upload-form button:hover {
+            transform: scale(1.05);
+            box-shadow: 0 4px 8px rgba(212, 175, 55, 0.3);
+        }
+        .upload-form button:hover::after {
+            right: 5px;
+        }
+        /* Loader */
+        .loader {
+            display: none;
+            border: 4px solid #F8F9FA;
+            border-top: 4px solid var(--metallic-gold);
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            animation: spin 1s linear infinite;
+            margin: 20px auto;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        /* Resultado */
+        #result {
+            margin-top: 30px;
+            padding: 20px;
+            border: 2px solid var(--metallic);
+            border-radius: 10px;
+            background: #F8F9FA;
+            display: none;
+            animation: fadeIn 0.5s ease-in;
+        }
+        #result.show {
+            display: block;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        #result h3 {
+            color: var(--text-light);
+            margin: 0 0 10px;
+        }
+        #result p {
+            margin: 10px 0;
+        }
+        #stats {
+            margin-top: 15px;
+            text-align: left;
+            font-size: 14px;
+            background: #FFFFFF;
+            padding: 10px;
+            border-radius: 5px;
+            border-left: 4px solid var(--metallic-gold);
+        }
+        #stats ul {
+            list-style: none;
+            padding: 0;
+        }
+        #stats li {
+            padding: 5px 0;
+            border-bottom: 1px solid var(--bg-light);
+        }
+        #stats li:last-child {
+            border-bottom: none;
+        }
+        /* Pie de página */
+        .footer {
+            margin-top: 20px;
+            font-size: 12px;
+            color: #7A7A7A;
+        }
+        .footer::before {
+            content: "©";
+            margin-right: 5px;
+        }
+        /* Tema oscuro */
+        .theme-toggle {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            padding: 5px 10px;
+            background: var(--metallic-silver);
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+        .theme-toggle:hover {
+            background: var(--metallic);
+        }
+        /* Responsividad */
+        @media (max-width: 768px) {
+            .container {
+                flex-direction: column;
+                padding: 20px;
+                max-width: 100%;
+            }
+            .sidebar {
+                width: 100%;
+                border-radius: 10px 10px 0 0;
+                margin-bottom: 20px;
+            }
+            .main-content {
+                padding: 0;
+            }
+            h1 {
+                font-size: 22px;
+            }
+            .upload-form {
+                padding: 15px;
+            }
+            .upload-form button {
+                padding: 10px 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="sidebar">
+            <h3>Información</h3>
+            <p>Fecha: {{ "Tuesday, June 03, 2025" }}</p>
+            <p>Hora: {{ "07:26 AM -05" }}</p>
+            <p>Versión: 1.0</p>
+        </div>
+        <div class="main-content">
+            <div class="header">
+                <h1>Clasificador de CVs</h1>
+            </div>
+            <button class="theme-toggle" onclick="toggleDarkMode()">Tema Oscuro</button>
+            <form class="upload-form" method="POST" action="/upload" enctype="multipart/form-data">
+                <input type="file" name="cv_file" accept=".pdf,.txt" required>
+                <button type="submit">Subir y Clasificar</button>
+            </form>
+            <div class="loader" id="loader"></div>
+            <div id="result">
+                <h3>Resultado:</h3>
+                <p id="result-text"></p>
+                {% if stats %}
+                    <div id="stats">
+                        <h3>Estadísticas:</h3>
+                        <ul>
+                        {% for area, score in stats.items() %}
+                            <li>{{ area }}: {{ score }}</li>
+                        {% endfor %}
+                        </ul>
+                    </div>
+                {% endif %}
+            </div>
+            <div class="footer">
+                xAI - Clasificador de CVs 2025
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function toggleDarkMode() {
+            document.body.classList.toggle('dark-mode');
+            const container = document.querySelector('.container');
+            container.style.background = document.body.classList.contains('dark-mode') ? '#3F3F3F' : '#FFFFFF';
+        }
+
+        document.querySelector('form').addEventListener('submit', function(e) {
+            const loader = document.getElementById('loader');
+            const resultDiv = document.getElementById('result');
+            resultDiv.classList.remove('show');
+            loader.style.display = 'block';
+            const resultText = document.getElementById('result-text');
+            resultText.innerText = 'Procesando...';
+            resultDiv.classList.add('show');
+            // Simular carga (puedes ajustar el tiempo)
+            setTimeout(() => {
+                loader.style.display = 'none';
+            }, 2000); // 2 segundos de ejemplo
+        });
+
+        {% if result %}
+            document.getElementById('result-text').innerText = '{{ result }}';
+            document.getElementById('result').classList.add('show');
+            document.getElementById('loader').style.display = 'none';
+        {% endif %}
+    </script>
+</body>
+</html>
